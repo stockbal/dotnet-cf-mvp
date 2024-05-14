@@ -1,0 +1,28 @@
+# Fetch token for default idp user
+# @name token
+POST {{$dotenv uaaUrl}}/oauth/token
+Content-Type: application/x-www-form-urlencoded
+Authorization: Basic {{$dotenv clientId}}:{{$dotenv clientSecret}}
+
+grant_type=password
+&username={{$dotenv user}}
+&password={{$dotenv pw_default_idp}}
+
+###
+
+# Token with custom IdP
+# @name token
+POST {{$dotenv uaaUrl}}/oauth/token
+Content-Type: application/x-www-form-urlencoded
+Authorization: Basic {{$dotenv clientId}}:{{$dotenv clientSecret}}
+
+grant_type=password
+&username={{$dotenv user}}
+&password={{$dotenv pw_custom_idp}}
+&login_hint=%7B%22origin%22%3A%20%22sap.custom%22%7D
+
+
+###
+# Test the service endpoint
+GET {{$dotenv appUrl}}/HelloWorld
+Authorization: Bearer {{token.response.body.access_token}}

@@ -1,0 +1,48 @@
+_schema-version: "3.1"
+ID: dotnet-cf-mvp
+version: 1.0.0
+description: "Simple .NET Core Web API Demo for CF"
+parameters:
+  deploy_mode: html5-repo
+  enable-parallel-deployments: true
+
+modules:
+  # ASP.NET Core service for generating word documents
+  # --------------------------------------------------
+  - name: dotnet-cf-mvp-service
+    # NOTE: 'dotnet_core' type is no longer recognized and deployment fails with unsupported type
+    #        -> nodejs is used as 'dummy' placeholder
+    type: nodejs
+    path: dotnet-module
+    parameters:
+      # Online dotnet buildpack removal on Nov. 16, 2023 (see SAPNote 3364781)
+      buildpack: https://github.com/cloudfoundry/dotnet-core-buildpack.git#v2.4.24
+      memory: 1024MB
+    requires:
+      - name: dotnet-cf-mvp-uaa
+    provides:
+      - name: net-srv-api
+        properties:
+          srv-url: ${default-url}
+    build-parameters:
+      # Dummy custom builder
+      builder: custom
+      commands:
+        - echo ">> Building .NET module"
+      ignore:
+        - "src/**/bin/"
+        - "src/**/obj/"
+        - "tests/"
+        - .env
+        - "*.http"
+    properties:
+      DOTNET_CLI_TELEMETRY_OPTOUT: 1
+      DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+
+resources:
+  - name: dotnet-cf-mvp-uaa
+    type: org.cloudfoundry.managed-service
+    parameters:
+      path: ./xs-security.json
+      service: xsuaa
+      service-plan: application

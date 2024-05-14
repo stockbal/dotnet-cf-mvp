@@ -1,0 +1,34 @@
+{
+  "xsappname": "dotnet-cf-mvp",
+  "tenant-mode": "dedicated",
+  "scopes": [
+    {
+      "name": "$XSAPPNAME.User",
+      "description": "User"
+    }
+  ],
+  "attributes": [],
+  "role-templates": [
+    {
+      "name": "User",
+      "description": "generated",
+      "scope-references": ["$XSAPPNAME.User"],
+      "attribute-references": []
+    }
+  ],
+  "role-collections": [
+    {
+      "name": "Dot Net Demo User",
+      "description": "Grants User rights to .NET Demo",
+      "role-template-references": ["$XSAPPNAME.User"]
+    }
+  ],
+  "authorities-inheritance": false,
+  "oauth2-configuration": {
+    "credential-types": ["binding-secret", "x509"],
+    "redirect-uris": [
+      "http://localhost:5000/login/callback",
+      "https://oauth.pstmn.io/v1/callback"
+    ]
+  }
+}
