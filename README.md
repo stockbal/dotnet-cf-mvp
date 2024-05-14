@@ -1,4 +1,4 @@
-# .NET Core Demo project for MTA deployment to Cloud Foundry
+# .NET Core demo project for MTA deployment to Cloud Foundry
 
 This demo project shows a very simple ASP.NET Web API service that returns hello world. It is secured with XSUAA from SAP BTP and can be deployed via `mta.yaml` to SAP BTP Cloud Foundry Environment.  
 It can be used as a template to build more complex multi-target that require a .NET module.
@@ -18,7 +18,8 @@ Have a look in the [Authentication](./dotnet-module/src/DemoService/Authenticati
 
 A workaround for the builder is required, as `dotnet_core` is no longer a recognized and valid application type.
 
-In this sample we use the `nodejs` module and overwrite the builder with a dummy `echo` command. As we use the source
+In this sample we use the `nodejs` module type and overwrite the builder with a dummy `echo` command. As we use a *source-based* deployment, no build for the .NET module is required.  
+The actual build will be done via the buildpack during the set-up of the container.
 
 ```yaml
 modules:
@@ -60,6 +61,15 @@ If you have several projects in your module you need to specify your main projec
 ```ini
 [config]
 project = src/DemoService/DemoService.csproj
+```
+
+### Build/Deployment to SAP BTP Cloud foundry
+
+```shell
+mbt build --mtar archive
+# login to cloud foundry and choose space for deployment
+# cf l
+cf deploy mta_archives/archive.mtar
 ```
 
 ## Links
