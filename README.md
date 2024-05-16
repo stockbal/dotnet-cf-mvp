@@ -39,7 +39,7 @@ The repository [dotnet-core-buildpack](https://github.com/cloudfoundry/dotnet-co
 ```yaml
     ...
     parameters:
-      buildpack: https://github.com/cloudfoundry/dotnet-core-buildpack.git#v2.4.24
+      buildpack: https://github.com/cloudfoundry/dotnet-core-buildpack.git#v2.4.27
 ```
 
 ### Setting buildpack options
@@ -75,3 +75,5 @@ cf deploy mta_archives/archive.mtar
 ## Links
 
 - [Cloud Foundry docs | .NET Buildpack](https://docs.cloudfoundry.org/buildpacks/dotnet-core/index.html)
+- [.NET Core CF Buildpack](https://github.com/cloudfoundry/dotnet-core-buildpack)
+- [.NET CLI installation | Linux](https://learn.microsoft.com/de-de/dotnet/core/install/linux-scripted-manual#scripted-install)
