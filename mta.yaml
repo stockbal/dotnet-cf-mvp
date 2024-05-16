@@ -11,7 +11,7 @@ modules:
     type: nodejs
     path: dotnet-module
     parameters:
-      buildpack: https://github.com/cloudfoundry/dotnet-core-buildpack.git#v2.4.24
+      buildpack: https://github.com/cloudfoundry/dotnet-core-buildpack.git#v2.4.27
       memory: 1024MB
     requires:
       - name: dotnet-cf-mvp-uaa
