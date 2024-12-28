@@ -12,6 +12,11 @@ Have a look in the [Authentication](./dotnet-module/src/DemoService/Authenticati
 | :exclamation:  The implementation is reverse engineered from [@sap/xssec](https://www.npmjs.com/package/@sap/xssec). Use at your own risk :smile:   :exclamation: |
 |-----------------------------------------|
 
+## JSON logging to support Application Logging or Cloud Logging Service
+
+Logging in JSON format is enabled via the  [Serilog](https://github.com/serilog/serilog) library and active in productive environment.  
+For the logger property `logger` the triggering class name of the log event is used. The `correlation_id` is either taken from the request header `x-correlation-id` (e.g. if passed from another cf application) or a new UUID is created which will be added to each log message, that is created during a single request.
+
 ## Specifics for .NET Core MTA deployment
 
 ### MTA.yaml
