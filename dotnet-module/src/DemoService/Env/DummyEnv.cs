@@ -1,13 +1,16 @@
-﻿namespace DevEpos.CF.Demo.Env {
-    /// <summary>
-    /// Dummy service env variables
-    /// </summary>
-    public class DummyEnv : IServiceEnv {
+﻿// Copyright (c) Demo AG. All Rights Reserved.
 
-        private readonly List<UaaCredentials> _xsuaaCredentials;
+namespace DevEpos.CF.Demo.Env;
 
-        public DummyEnv() {
-            _xsuaaCredentials = new List<UaaCredentials>{
+/// <summary>
+/// Dummy service env variables
+/// </summary>
+public class DummyEnv : IServiceEnv {
+
+    private readonly List<UaaCredentials> _xsuaaCredentials;
+
+    public DummyEnv() {
+        _xsuaaCredentials = new List<UaaCredentials>{
                 new() {
                     ClientId = "sb-client-dotnet-demo",
                     ClientSecret = "secret",
@@ -25,8 +28,7 @@
                     UaaDomain = "authentication.com"
                 }
             };
-        }
-
-        public List<UaaCredentials> XsuaaCredentials => _xsuaaCredentials;
     }
+
+    public List<UaaCredentials> XsuaaCredentials => _xsuaaCredentials;
 }
