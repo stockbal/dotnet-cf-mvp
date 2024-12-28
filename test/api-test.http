@@ -20,7 +20,11 @@ grant_type=password
 &login_hint=%7B%22origin%22%3A%20%22sap.custom%22%7D
 
 
-### Test the service endpoint
+### Test the service endpoint without correlation_id
+GET {{$dotenv appUrl}}/HelloWorld
+Authorization: Bearer {{token.response.body.access_token}}
+
+### Test the service endpoint with dedicated correlation_id
 GET {{$dotenv appUrl}}/HelloWorld
 x-correlation-id: 92024be8-4593-4b37-9aca-2f32d9f242ea
 Authorization: Bearer {{token.response.body.access_token}}
