@@ -1,3 +1,6 @@
+@bearerAuth = Authorization: Bearer {{token.response.body.access_token}}
+@json = Content-Type: application/json
+
 ### Fetch token for default idp user
 # @name token
 POST {{$dotenv uaaUrl}}/oauth/token
@@ -15,20 +18,27 @@ Content-Type: application/x-www-form-urlencoded
 Authorization: Basic {{$dotenv clientId}}:{{$dotenv clientSecret}}
 
 grant_type=password
-&username={{$dotenv user}}
+&username={{$dotenv user_custom_idp}}
 &password={{$dotenv pw_custom_idp}}
 &login_hint=%7B%22origin%22%3A%20%22sap.custom%22%7D
 
 
 ### Test the service endpoint without correlation_id
 GET {{$dotenv appUrl}}/HelloWorld
-Authorization: Bearer {{token.response.body.access_token}}
+{{bearerAuth}}
 
 ### Test the service endpoint with dedicated correlation_id
 GET {{$dotenv appUrl}}/HelloWorld
 x-correlation-id: 92024be8-4593-4b37-9aca-2f32d9f242ea
-Authorization: Bearer {{token.response.body.access_token}}
+{{bearerAuth}}
 
-### Test the service endpoint (locally)
+### Execute /HelloWorld via CAP app proxy service
+POST {{$dotenv capAppUrl}}/rest/proxy/executeHello
+{{json}}
+{{bearerAuth}}
+
+{}
+
+### Test the .NET service endpoint (locally)
 GET https://localhost:7005/HelloWorld
 x-correlation-id: 92024be8-4593-4b37-9aca-2f32d9f242ea

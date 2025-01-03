@@ -1,0 +1,40 @@
+{
+  "name": "cap-module",
+  "version": "1.0.0",
+  "description": "Proxy service to call .NET API",
+  "license": "MIT",
+  "private": true,
+  "dependencies": {
+    "@sap-cloud-sdk/connectivity": "^3.25.0",
+    "@sap-cloud-sdk/http-client": "^3.25.0",
+    "@sap-cloud-sdk/resilience": "^3.25.0",
+    "@sap/cds": "^8",
+    "@sap/xssec": "^4",
+    "express": "^4"
+  },
+  "devDependencies": {
+    "@cap-js/cds-types": "^0.8.0",
+    "@cap-js/sqlite": "^1",
+    "@sap/cds-dk": "^8"
+  },
+  "scripts": {
+    "start": "cds-serve"
+  },
+  "cds": {
+    "requires": {
+      "DOTNET_API": {
+        "kind": "rest",
+        "[production]": {
+          "credentials": {
+            "destination": "dotnet-api",
+            "forwardAuthToken": true
+          }
+        }
+      },
+      "[production]": {
+        "auth": "xsuaa",
+        "destinations": true
+      }
+    }
+  }
+}

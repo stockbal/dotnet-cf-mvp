@@ -17,6 +17,8 @@ Have a look in the [Authentication](./dotnet-module/src/DemoService/Authenticati
 Logging in JSON format is enabled via the  [Serilog](https://github.com/serilog/serilog) library and active in productive environment.  
 For the logger property `logger` the triggering class name of the log event is used. The `correlation_id` is either taken from the request header `x-correlation-id` (e.g. if passed from another cf application) or a new UUID is created which will be added to each log message, that is created during a single request.
 
+The project also contains a small [CAP](https://cap.cloud.sap) project to demonstrate the proper forwarding of the `correlation_id` when the .NET endpoint is called from CAP (see [proxy-service.js](./cap-module/srv/proxy-service.js)).
+
 ## Specifics for .NET Core MTA deployment
 
 ### MTA.yaml
@@ -75,6 +77,28 @@ mbt build --mtar archive
 # login to cloud foundry and choose space for deployment
 # cf l
 cf deploy mta_archives/archive.mtar
+```
+
+### Testing the deployed service
+
+Create `.env` file in folder `/test`, to execute the requests in [api-test.http](./test/api-test.http).
+
+```properties
+# Credentials of XSUAA instance
+uaaUrl=https://...
+clientId=
+clientSecret=""
+
+# URLS of deployed CAP and .NET modules
+appUrl=https://...
+capAppUrl=https://..
+
+user_default_idp=
+pw_default_idp=""
+
+# If you have a custom IdP configured
+user_custom_idp=
+pw_custom_idp=""
 ```
 
 ## Links

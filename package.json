@@ -1,0 +1,13 @@
+{
+  "name": "dotnet-cf-mvp",
+  "version": "1.0.0",
+  "description": "ASP.NET Core Demo project for Cloud Foundry deployment",
+  "scripts": {
+    "build:cap": "cd cap-module && npm ci && npx cds build --production",
+    "build": "rm -rf mta_archives/ && npx mbt build --mtar archive",
+    "deploy": "cf deploy mta_archives/archive.mtar --retries 0",
+    "undeploy": "cf undeploy dotnet-cf-mvp --delete-service-keys --delete-services"
+  },
+  "author": "Ludwig Stockbauer-Muhr",
+  "license": "MIT"
+}

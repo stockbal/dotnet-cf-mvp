@@ -5,6 +5,11 @@ description: "Simple .NET Core Web API Demo for CF"
 parameters:
   deploy_mode: html5-repo
   enable-parallel-deployments: true
+build-parameters:
+  before-all:
+    - builder: custom
+      commands:
+        - npm run build:cap
 
 modules:
   - name: dotnet-cf-mvp-service
@@ -33,6 +38,25 @@ modules:
     properties:
       DOTNET_CLI_TELEMETRY_OPTOUT: 1
       DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+
+  - name: dotnet-cf-mvp-service-cap
+    type: nodejs
+    path: cap-module/gen/srv
+    parameters:
+      buildpack: nodejs_buildpack
+      readiness-health-check-type: http
+      readiness-health-check-http-endpoint: /health
+    build-parameters:
+      builder: npm
+    requires:
+      - name: dotnet-cf-mvp-uaa
+      - name: dotnet-cf-mvp-logging
+      - name: net-srv-api
+        group: destinations
+        properties:
+          name: dotnet-api
+          url: ~{srv-url}
+          forwardAuthToken: true
 
 resources:
   - name: dotnet-cf-mvp-uaa
