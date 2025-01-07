@@ -77,8 +77,6 @@ builder.Services.AddSingleton<LoggerTypeEnricher>();
 
 var app = builder.Build();
 
-app.UseMiddleware<LoggingMiddleware>();
-
 if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Hybrid")) {
     // Load Cloud Foundry Environment variables from .env files
     if (!app.Environment.IsDevelopment()) {
