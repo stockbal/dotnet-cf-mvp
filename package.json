@@ -4,6 +4,7 @@
   "description": "ASP.NET Core Demo project for Cloud Foundry deployment",
   "scripts": {
     "build:cap": "cd cap-module && npm ci && npx cds build --production",
+    "build:typer": "cd cap-module && npx @cap-js/cds-typer \"*\" --outputDirectory ./gen/srv/@cds-models",
     "build": "rm -rf mta_archives/ && npx mbt build --mtar archive",
     "deploy": "cf deploy mta_archives/archive.mtar --retries 0",
     "undeploy": "cf undeploy dotnet-cf-mvp --delete-service-keys --delete-services"

@@ -10,21 +10,41 @@ build-parameters:
     - builder: custom
       commands:
         - npm run build:cap
-
+        - npm run build:typer
 modules:
   - name: dotnet-cf-mvp-dotnet-srv
     type: nodejs
     path: dotnet-module
     parameters:
-      buildpack: https://github.com/cloudfoundry/dotnet-core-buildpack.git#v2.4.27
-      memory: 1024MB
+      buildpack: https://github.com/cloudfoundry/dotnet-core-buildpack.git#v2.4.45
+      memory: 256MB
     requires:
       - name: dotnet-cf-mvp-uaa
       - name: dotnet-cf-mvp-logging
-    provides:
-      - name: net-srv-api
-        properties:
-          srv-url: ${default-url}
+      - name: dotnet-cf-mvp-autoscaler
+        parameters:
+          config:
+            configuration:
+              custom_metrics:
+                metric_submission_strategy:
+                  allow_from: bound_app
+            instance_min_count: 1
+            instance_max_count: 4
+            scaling_rules:
+              - metric_type: taskqueue
+                breach_duration_secs: 60
+                threshold: 5
+                operator: ">="
+                cool_down_secs: 60
+                adjustment: "+1"
+              - metric_type: taskqueue
+                breach_duration_secs: 60
+                threshold: 3
+                operator: "<="
+                cool_down_secs: 60
+                adjustment: "-1"
+            credential-type: x509
+      - name: cap-srv-api
     build-parameters:
       builder: custom
       commands: []
@@ -35,6 +55,7 @@ modules:
         - .env
         - "*.http"
     properties:
+      CAP_SRV_URL: ~{cap-srv-api/srv-url}
       DOTNET_CLI_TELEMETRY_OPTOUT: 1
       DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
 
@@ -47,15 +68,23 @@ modules:
       readiness-health-check-http-endpoint: /health
     build-parameters:
       builder: npm
+    provides:
+      - name: cap-srv-api
+        properties:
+          srv-url: ${default-url}
     requires:
       - name: dotnet-cf-mvp-uaa
       - name: dotnet-cf-mvp-logging
-      - name: net-srv-api
-        group: destinations
-        properties:
-          name: dotnet-api
-          url: ~{srv-url}
-          forwardAuthToken: true
+      - name: dotnet-cf-mvp-db
+      - name: dotnet-cf-mvp-autoscaler
+
+  - name: dotnet-cf-mvp-db-deployer
+    type: hdb
+    path: cap-module/gen/db
+    parameters:
+      buildpack: nodejs_buildpack
+    requires:
+      - name: dotnet-cf-mvp-db
 
 resources:
   - name: dotnet-cf-mvp-uaa
@@ -70,3 +99,15 @@ resources:
     parameters:
       service: application-logs
       service-plan: lite
+
+  - name: dotnet-cf-mvp-autoscaler
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: autoscaler
+      service-plan: standard
+
+  - name: dotnet-cf-mvp-db
+    type: com.sap.xs.hdi-container
+    parameters:
+      service: hana
+      service-plan: hdi-shared

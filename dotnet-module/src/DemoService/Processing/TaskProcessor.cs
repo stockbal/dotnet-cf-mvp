@@ -1,0 +1,97 @@
+// Copyright (c) Demo AG. All Rights Reserved.
+
+
+using System.Net.Http.Headers;
+using System.Text.Json;
+using DevEpos.CF.Demo.Env;
+using DevEpos.CF.Demo.ExternalApi;
+using DevEpos.CF.Demo.Logging;
+
+namespace DevEpos.CF.Demo.Processing;
+
+public class TaskProcessor : ITaskProcessor {
+    private readonly ILogger<ITaskProcessor> _logger;
+    private readonly IServiceEnv _env;
+    private readonly ITokenService _tokenService;
+    private readonly IHttpClientFactory _clientFactory;
+
+    public TaskProcessor(ILogger<ITaskProcessor> logger, IHttpClientFactory clientFactory, IServiceEnv env, ITokenService tokenService) {
+        _logger = logger;
+        _clientFactory = clientFactory;
+        _env = env;
+        _tokenService = tokenService;
+    }
+
+    public async Task<int> ProcessTaskAsync() {
+        // fetch next open task
+        var task = await FetchNextOpenTaskAsync();
+        if (task?.ID != null) {
+            _logger.LogInformation("Processing Task with ID: {taskId} and Name: {taskName}", task.ID, task.Name);
+            // Simulate work
+            await Task.Delay(TimeSpan.FromSeconds(30));
+
+            // set task to completed
+            if (await SetTaskCompleted(task.ID)) {
+                _logger.LogInformation("Task with ID: {taskId} has been completed.", task.ID);
+            } else {
+                _logger.LogWarning("Failed to complete Task with ID: {taskId}.", task.ID);
+            }
+            return 1;
+        }
+        return 0;
+    }
+
+    private async Task<DemoTask?> FetchNextOpenTaskAsync() {
+        using var client = await CreateConfiguredHttpClientAsync();
+
+        _logger.LogInformation("Reserving next open task from queue...");
+        var request = await CreateRequestWithAuthenticationAsync(HttpMethod.Post, "/odata/v4/queue/reserveOpenTask");
+
+        var response = await client.SendAsync(request);
+        if (response.IsSuccessStatusCode) {
+            var jsonResult = await response.Content.ReadAsStringAsync();
+            _logger.LogInformation("Received open task: {jsonResult}", jsonResult);
+            if (string.IsNullOrEmpty(jsonResult)) {
+                return null;
+            }
+            return JsonSerializer.Deserialize<DemoTask>(jsonResult);
+        } else {
+            _logger.LogError("Failed to reserve open task. Status Code: {statusCode}, Body: {body}", response.StatusCode, response.Content?.ToString());
+        }
+        return null;
+    }
+
+    private async Task<bool> SetTaskCompleted(string taskId) {
+        using var client = await CreateConfiguredHttpClientAsync();
+
+        var request = await CreateRequestWithAuthenticationAsync(HttpMethod.Post, $"/odata/v4/queue/Tasks({taskId})/complete");
+
+        var response = await client.SendAsync(request);
+        if (response.IsSuccessStatusCode) {
+            return true;
+        }
+        return false;
+    }
+
+    private async Task<HttpClient> CreateConfiguredHttpClientAsync() {
+        var client = _clientFactory.CreateClient();
+        client.DefaultRequestHeaders.Clear();
+        client.DefaultRequestHeaders.ConnectionClose = true;
+        client.BaseAddress = new Uri(Environment.GetEnvironmentVariable("CAP_SRV_URL")!);
+        return client;
+    }
+
+    private async Task<HttpRequestMessage> CreateRequestWithAuthenticationAsync(HttpMethod method, string path) {
+        var token = await _tokenService.GetClientCredentialsToken(_env.XsuaaCredentials[0]);
+
+        var request = new HttpRequestMessage(method, path);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        request.Headers.Add("correlation_id", Context.CorrelationId);
+
+        var content = new StringContent("{}");
+        content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+        request.Content = content;
+
+        return request;
+    }
+}

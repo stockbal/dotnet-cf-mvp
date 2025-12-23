@@ -1,0 +1,41 @@
+@bearerAuth = Authorization: Bearer {{token.response.body.access_token}}
+
+### Retrieve OAuth Token
+# @name token
+POST {{$dotenv uaaUrl}}/oauth/token
+Content-Type: application/x-www-form-urlencoded
+Authorization: Basic {{$dotenv clientid}}:{{$dotenv clientsecret}}
+
+grant_type=client_credentials
+
+### Creates new Task
+POST {{$dotenv appUrl}}/odata/v4/queue/newTask
+Content-Type: application/json
+{{bearerAuth}}
+
+{}
+
+### Completes the oldest Task
+POST {{$dotenv appUrl}}/odata/v4/queue/completeOldestTask
+Content-Type: application/json
+{{bearerAuth}}
+
+{}
+
+### Clear all tasks
+POST {{$dotenv appUrl}}/odata/v4/queue/removeTasks
+Content-Type: application/json
+{{bearerAuth}}
+
+{}
+
+### Reserve next open task
+POST {{$dotenv appUrl}}/odata/v4/queue/reserveOpenTask
+Content-Type: application/json
+{{bearerAuth}}
+
+{}
+
+### Read all tasks
+GET {{$dotenv appUrl}}/odata/v4/queue/Tasks?$filter=status eq 'NEW'&$count=true
+{{bearerAuth}}

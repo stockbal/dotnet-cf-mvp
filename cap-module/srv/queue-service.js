@@ -1,0 +1,63 @@
+const cds = require("@sap/cds");
+const { Tasks } = require("#cds-models/demo");
+const {
+  Task,
+  completeOldestTask,
+  newTask,
+  removeTasks,
+  reserveOpenTask,
+} = require("#cds-models/QueueService");
+
+module.exports = class QueueService extends cds.ApplicationService {
+  #logger = cds.log("queue-service");
+  init() {
+    this.on(reserveOpenTask, async (req) => {
+      const nextTask = await SELECT.one
+        .from(Tasks)
+        .where({ status: "NEW" })
+        .orderBy("createdAt ASC")
+        .forUpdate();
+      if (nextTask) {
+        // set task to in processing
+        await UPDATE(Tasks, nextTask.ID).set({ status: "PROCESSING" });
+        this.#logger.info(`Task with ID ${nextTask.ID} is now in processing.`);
+        return { ID: nextTask.ID, name: nextTask.name };
+      } else {
+        this.#logger.info("No open tasks available to reserve.");
+        return null;
+      }
+    });
+
+    this.on(Task.actions.complete, async (req) => {
+      await UPDATE(req.subject).set({ status: "COMPLETED" });
+    });
+
+    this.on(newTask, async (req) => {
+      await INSERT.into(Tasks).entries({
+        name: `New Task [${
+          (
+            await SELECT.one.from(Tasks).columns("count(*) as count")
+          ).count
+        }]`,
+        status: "NEW",
+      });
+    });
+
+    this.on(removeTasks, async (_) => {
+      return DELETE.from(Tasks);
+    });
+
+    this.on(completeOldestTask, async (req) => {
+      const task = await SELECT.one
+        .from(Tasks)
+        .orderBy("createdAt ASC")
+        .where({ status: "NEW" });
+      if (!task) {
+        req.reject(404, `Task with name '${req.data.name}' not found.`);
+      }
+      await UPDATE(Tasks, task.ID).set({ status: "COMPLETED" });
+    });
+
+    return super.init();
+  }
+};

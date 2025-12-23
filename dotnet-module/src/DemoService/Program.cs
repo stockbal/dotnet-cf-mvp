@@ -5,6 +5,8 @@ using DevEpos.CF.Demo.Common;
 using DevEpos.CF.Demo.Env;
 using DevEpos.CF.Demo.ExternalApi;
 using DevEpos.CF.Demo.Logging;
+using DevEpos.CF.Demo.Processing;
+using DevEpos.CF.Demo.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Serilog;
 using Serilog.Events;
@@ -74,6 +76,8 @@ builder.Services.ConfigureOptions<ConfigureAuthorizationOptions>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSingleton<SomeProcessor>();
 builder.Services.AddSingleton<LoggerTypeEnricher>();
+builder.Services.AddScoped<ITaskProcessor, TaskProcessor>();
+builder.Services.AddHostedService<TaskBackgroundService>();
 
 var app = builder.Build();
 
