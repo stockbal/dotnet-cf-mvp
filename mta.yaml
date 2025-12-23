@@ -12,7 +12,7 @@ build-parameters:
         - npm run build:cap
 
 modules:
-  - name: dotnet-cf-mvp-service
+  - name: dotnet-cf-mvp-dotnet-srv
     type: nodejs
     path: dotnet-module
     parameters:
@@ -27,8 +27,7 @@ modules:
           srv-url: ${default-url}
     build-parameters:
       builder: custom
-      commands:
-        - echo ">> Building .NET module"
+      commands: []
       ignore:
         - "src/**/bin/"
         - "src/**/obj/"
@@ -39,7 +38,7 @@ modules:
       DOTNET_CLI_TELEMETRY_OPTOUT: 1
       DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
 
-  - name: dotnet-cf-mvp-service-cap
+  - name: dotnet-cf-mvp-cap-srv
     type: nodejs
     path: cap-module/gen/srv
     parameters:
