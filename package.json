@@ -3,11 +3,11 @@
   "version": "1.0.0",
   "description": "ASP.NET Core Demo project for Cloud Foundry deployment",
   "scripts": {
-    "build:cap": "cd cap-module && npm ci && npx cds build --production",
-    "build:typer": "cd cap-module && npx @cap-js/cds-typer \"*\" --outputDirectory ./gen/srv/@cds-models",
     "build": "rm -rf mta_archives/ && npx mbt build --mtar archive",
     "deploy": "cf deploy mta_archives/archive.mtar --retries 0",
-    "undeploy": "cf undeploy dotnet-cf-mvp --delete-service-keys --delete-services"
+    "undeploy": "cf undeploy dotnet-cf-mvp --delete-service-keys --delete-services",
+    "dotnet:logs": "cf logs dotnet-cf-mvp-dotnet-srv > dotnet-logs.json",
+    "cap:logs": "cf logs dotnet-cf-mvp-cap-srv > cap-logs.json"
   },
   "author": "Ludwig Stockbauer-Muhr",
   "license": "MIT"

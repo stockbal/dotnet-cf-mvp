@@ -1,3 +1,5 @@
 mta_archives/
 .env
 default-*env.json
+cap-logs.json
+dotnet-logs.json
