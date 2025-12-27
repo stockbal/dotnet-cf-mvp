@@ -36,6 +36,14 @@ Content-Type: application/json
 
 {}
 
-### Read all tasks
+### Read New tasks
 GET {{$dotenv appUrl}}/odata/v4/queue/Tasks?$filter=status eq 'NEW'&$count=true
+{{bearerAuth}}
+
+### Read PROCESSING tasks
+GET {{$dotenv appUrl}}/odata/v4/queue/Tasks?$filter=status eq 'PROCESSING'&$count=true
+{{bearerAuth}}
+
+### Read all tasks
+GET {{$dotenv appUrl}}/odata/v4/queue/Tasks?$count=true
 {{bearerAuth}}

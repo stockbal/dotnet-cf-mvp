@@ -6,8 +6,8 @@ service QueueService {
     action completeOldestTask();
     action removeTasks();
 
-    action reserveOpenTask() returns {
-        ID   : UUID;
+    action reserveOpenTask(instanceIndex: Int32) returns {
+        id   : UUID;
         name : String;
     };
 

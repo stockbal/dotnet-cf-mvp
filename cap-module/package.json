@@ -21,7 +21,10 @@
     "@sap/cds-dk": "^9"
   },
   "scripts": {
-    "start": "cds-serve"
+    "start": "cds-serve",
+    "prebuild": "npm ci",
+    "build": "cds build --production",
+    "postbuild": "npx @cap-js/cds-typer \"*\" --outputDirectory ./gen/srv/@cds-models"
   },
   "cds": {
     "requires": {

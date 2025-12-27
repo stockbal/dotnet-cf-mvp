@@ -17,9 +17,13 @@ module.exports = class QueueService extends cds.ApplicationService {
         .where({ status: "NEW" })
         .orderBy("createdAt ASC")
         .forUpdate();
+      // TODO: prevent reserving tasks if queue is in the downscaling range (<= 3 NEW tasks)
       if (nextTask) {
         // set task to in processing
-        await UPDATE(Tasks, nextTask.ID).set({ status: "PROCESSING" });
+        await UPDATE(Tasks, nextTask.ID).set({
+          status: "PROCESSING",
+          processingInstance: req.data.instanceIndex,
+        });
         this.#logger.info(`Task with ID ${nextTask.ID} is now in processing.`);
         return { ID: nextTask.ID, name: nextTask.name };
       } else {

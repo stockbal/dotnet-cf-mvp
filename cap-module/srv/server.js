@@ -8,8 +8,9 @@ const VCAP_SERVICES = JSON.parse(process.env.VCAP_SERVICES);
 const logger = cds.log("server");
 
 cds.on("served", async (_) => {
+  // send metric to application autoscaler
   cds.spawn({ every: 60000 }, async () => {
-    // send metric to application autoscaler
+    /** @type {{count:number}} */
     const openTasks = await SELECT.one
       .from(Tasks)
       .where({ status: "NEW" })
@@ -33,6 +34,7 @@ cds.on("served", async (_) => {
           metrics: [
             {
               name: "taskqueue",
+              // TODO: include processing tasks in metric if a tasks with status PROCESSING exists with app index > 0
               value: openTasks.count,
             },
           ],

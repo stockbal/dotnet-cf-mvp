@@ -28,7 +28,9 @@ public class TaskProcessor : ITaskProcessor {
         if (task?.ID != null) {
             _logger.LogInformation("Processing Task with ID: {taskId} and Name: {taskName}", task.ID, task.Name);
             // Simulate work
-            await Task.Delay(TimeSpan.FromSeconds(30));
+            var randomSeconds = Random.Shared.Next(30, 101);
+            _logger.LogInformation("Simulating work for {seconds} seconds", randomSeconds);
+            await Task.Delay(TimeSpan.FromSeconds(randomSeconds));
 
             // set task to completed
             if (await SetTaskCompleted(task.ID)) {
@@ -42,10 +44,11 @@ public class TaskProcessor : ITaskProcessor {
     }
 
     private async Task<DemoTask?> FetchNextOpenTaskAsync() {
-        using var client = await CreateConfiguredHttpClientAsync();
+        using var client = CreateConfiguredHttpClient();
 
         _logger.LogInformation("Reserving next open task from queue...");
-        var request = await CreateRequestWithAuthenticationAsync(HttpMethod.Post, "/odata/v4/queue/reserveOpenTask");
+        var request = await CreateRequestWithAuthenticationAsync(HttpMethod.Post, "/odata/v4/queue/reserveOpenTask",
+            $"{{\"instanceIndex\":{int.Parse(Environment.GetEnvironmentVariable("CF_INSTANCE_INDEX")!)}}}");
 
         var response = await client.SendAsync(request);
         if (response.IsSuccessStatusCode) {
@@ -62,7 +65,7 @@ public class TaskProcessor : ITaskProcessor {
     }
 
     private async Task<bool> SetTaskCompleted(string taskId) {
-        using var client = await CreateConfiguredHttpClientAsync();
+        using var client = CreateConfiguredHttpClient();
 
         var request = await CreateRequestWithAuthenticationAsync(HttpMethod.Post, $"/odata/v4/queue/Tasks({taskId})/complete");
 
@@ -73,7 +76,7 @@ public class TaskProcessor : ITaskProcessor {
         return false;
     }
 
-    private async Task<HttpClient> CreateConfiguredHttpClientAsync() {
+    private HttpClient CreateConfiguredHttpClient() {
         var client = _clientFactory.CreateClient();
         client.DefaultRequestHeaders.Clear();
         client.DefaultRequestHeaders.ConnectionClose = true;
@@ -81,14 +84,14 @@ public class TaskProcessor : ITaskProcessor {
         return client;
     }
 
-    private async Task<HttpRequestMessage> CreateRequestWithAuthenticationAsync(HttpMethod method, string path) {
+    private async Task<HttpRequestMessage> CreateRequestWithAuthenticationAsync(HttpMethod method, string path, string jsonContent = "{}") {
         var token = await _tokenService.GetClientCredentialsToken(_env.XsuaaCredentials[0]);
 
         var request = new HttpRequestMessage(method, path);
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
         request.Headers.Add("correlation_id", Context.CorrelationId);
 
-        var content = new StringContent("{}");
+        var content = new StringContent(jsonContent);
         content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
         request.Content = content;
 

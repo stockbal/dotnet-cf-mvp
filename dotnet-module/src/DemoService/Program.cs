@@ -35,6 +35,8 @@ builder.Services.AddSerilog((services, lc) => {
             " ..@p } }\n"
         ));
     }
+    lc.MinimumLevel.Override("Microsoft", LogEventLevel.Warning);
+    lc.MinimumLevel.Override("System", LogEventLevel.Warning);
     lc.Enrich.With(enricher)
         .Enrich.FromLogContext()
         .MinimumLevel.Information();
@@ -74,7 +76,6 @@ if (builder.Environment.IsDevelopment()) {
 // configure some options
 builder.Services.ConfigureOptions<ConfigureAuthorizationOptions>();
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddSingleton<SomeProcessor>();
 builder.Services.AddSingleton<LoggerTypeEnricher>();
 builder.Services.AddScoped<ITaskProcessor, TaskProcessor>();
 builder.Services.AddHostedService<TaskBackgroundService>();

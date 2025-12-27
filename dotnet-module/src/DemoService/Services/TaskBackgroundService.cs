@@ -21,7 +21,7 @@ public class TaskBackgroundService : BackgroundService {
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken) {
-        _logger.LogInformation("TaskBackgroundService is starting.");
+        _logger.LogInformation("TaskBackgroundService is starting in app instance {instanceIndex}.", Environment.GetEnvironmentVariable("CF_INSTANCE_INDEX"));
 
         while (!stoppingToken.IsCancellationRequested) {
             Context.CorrelationId = Guid.NewGuid().ToString();
@@ -34,6 +34,7 @@ public class TaskBackgroundService : BackgroundService {
                 try {
                     if (await processor.ProcessTaskAsync() == 0) {
                         _logger.LogInformation("No tasks to process. Waiting before next check...");
+                        // REVISIT: different delays for different instances?? (only instance 0 processes tasks every 30s, others every 2min?)
                         await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
                     }
                 } catch (Exception ex) {

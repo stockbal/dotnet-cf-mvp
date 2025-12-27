@@ -7,11 +7,12 @@ namespace demo;
 
 @assert.unique: {unique: [name]}
 entity Tasks : cuid, managed {
-    name   : String(40);
-    status : String(15) enum {
+    name               : String(40);
+    status             : String(15) enum {
         NEW;
         PROCESSING;
         COMPLETED;
         FAILED;
-    }
+    };
+    processingInstance : Int32;
 }
