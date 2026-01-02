@@ -15,6 +15,13 @@ Content-Type: application/json
 
 {}
 
+### Creates new Task with delay
+POST {{$dotenv appUrl}}/odata/v4/queue/newTask
+Content-Type: application/json
+{{bearerAuth}}
+
+{"delay": 120}
+
 ### Completes the oldest Task
 POST {{$dotenv appUrl}}/odata/v4/queue/completeOldestTask
 Content-Type: application/json

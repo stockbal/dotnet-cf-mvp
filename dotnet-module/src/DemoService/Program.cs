@@ -32,7 +32,7 @@ builder.Services.AddSerilog((services, lc) => {
         lc.WriteTo.Console(new ExpressionTemplate(
             "{ {timestamp: @t, msg: @m, " +
             "level: if @l = 'Information' then 'INFO' else if @l = 'Warning' then 'WARN' else if @l = 'Verbose' then 'TRACE' else @l," +
-            " ..@p } }\n"
+            " exception: @x, ..@p } }\n"
         ));
     }
     lc.MinimumLevel.Override("Microsoft", LogEventLevel.Warning);
@@ -79,6 +79,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddSingleton<LoggerTypeEnricher>();
 builder.Services.AddScoped<ITaskProcessor, TaskProcessor>();
 builder.Services.AddHostedService<TaskBackgroundService>();
+builder.Services.AddHostedService<ShutdownService>();
 
 var app = builder.Build();
 

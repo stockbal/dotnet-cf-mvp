@@ -1,6 +1,5 @@
 // Copyright (c) Demo AG. All Rights Reserved.
 
-
 using System.Net.Http.Headers;
 using System.Text.Json;
 using DevEpos.CF.Demo.Env;
@@ -22,18 +21,18 @@ public class TaskProcessor : ITaskProcessor {
         _tokenService = tokenService;
     }
 
-    public async Task<int> ProcessTaskAsync() {
+    public async Task<int> ProcessTaskAsync(CancellationToken cancellationToken) {
         // fetch next open task
-        var task = await FetchNextOpenTaskAsync();
+        var task = await FetchNextOpenTaskAsync(cancellationToken);
         if (task?.ID != null) {
             _logger.LogInformation("Processing Task with ID: {taskId} and Name: {taskName}", task.ID, task.Name);
             // Simulate work
-            var randomSeconds = Random.Shared.Next(30, 101);
+            var randomSeconds = task.Delay != null && task.Delay > -1 ? task.Delay : Random.Shared.Next(30, 101);
             _logger.LogInformation("Simulating work for {seconds} seconds", randomSeconds);
-            await Task.Delay(TimeSpan.FromSeconds(randomSeconds));
+            await Task.Delay(TimeSpan.FromSeconds((int)randomSeconds), cancellationToken);
 
             // set task to completed
-            if (await SetTaskCompleted(task.ID)) {
+            if (await SetTaskCompleted(task.ID, cancellationToken)) {
                 _logger.LogInformation("Task with ID: {taskId} has been completed.", task.ID);
             } else {
                 _logger.LogWarning("Failed to complete Task with ID: {taskId}.", task.ID);
@@ -43,14 +42,14 @@ public class TaskProcessor : ITaskProcessor {
         return 0;
     }
 
-    private async Task<DemoTask?> FetchNextOpenTaskAsync() {
+    private async Task<DemoTask?> FetchNextOpenTaskAsync(CancellationToken cancellationToken) {
         using var client = CreateConfiguredHttpClient();
 
         _logger.LogInformation("Reserving next open task from queue...");
         var request = await CreateRequestWithAuthenticationAsync(HttpMethod.Post, "/odata/v4/queue/reserveOpenTask",
             $"{{\"instanceIndex\":{int.Parse(Environment.GetEnvironmentVariable("CF_INSTANCE_INDEX")!)}}}");
 
-        var response = await client.SendAsync(request);
+        var response = await client.SendAsync(request, cancellationToken);
         if (response.IsSuccessStatusCode) {
             var jsonResult = await response.Content.ReadAsStringAsync();
             _logger.LogInformation("Received open task: {jsonResult}", jsonResult);
@@ -64,12 +63,12 @@ public class TaskProcessor : ITaskProcessor {
         return null;
     }
 
-    private async Task<bool> SetTaskCompleted(string taskId) {
+    private async Task<bool> SetTaskCompleted(string taskId, CancellationToken cancellationToken) {
         using var client = CreateConfiguredHttpClient();
 
         var request = await CreateRequestWithAuthenticationAsync(HttpMethod.Post, $"/odata/v4/queue/Tasks({taskId})/complete");
 
-        var response = await client.SendAsync(request);
+        var response = await client.SendAsync(request, cancellationToken);
         if (response.IsSuccessStatusCode) {
             return true;
         }
@@ -96,5 +95,16 @@ public class TaskProcessor : ITaskProcessor {
         request.Content = content;
 
         return request;
+    }
+
+    public async Task CancelProcessingTasks(CancellationToken cancellationToken) {
+        using var client = CreateConfiguredHttpClient();
+        var instanceIndex = Environment.GetEnvironmentVariable("CF_INSTANCE_INDEX");
+
+        _logger.LogInformation("Cancelling all tasks that are processed by instance {index}", instanceIndex);
+        var request = await CreateRequestWithAuthenticationAsync(HttpMethod.Post, "/odata/v4/queue/reserveOpenTask",
+            $"{{\"instanceIndex\":{int.Parse(instanceIndex!)}}}");
+
+        await client.SendAsync(request, cancellationToken);
     }
 }

@@ -6,6 +6,7 @@ const {
   newTask,
   removeTasks,
   reserveOpenTask,
+  cancelTasks,
 } = require("#cds-models/QueueService");
 
 module.exports = class QueueService extends cds.ApplicationService {
@@ -25,11 +26,21 @@ module.exports = class QueueService extends cds.ApplicationService {
           processingInstance: req.data.instanceIndex,
         });
         this.#logger.info(`Task with ID ${nextTask.ID} is now in processing.`);
-        return { ID: nextTask.ID, name: nextTask.name };
+        return { ID: nextTask.ID, name: nextTask.name, delay: nextTask.delay };
       } else {
         this.#logger.info("No open tasks available to reserve.");
         return null;
       }
+    });
+
+    this.on(cancelTasks, async (req) => {
+      this.#logger.info(
+        "Cancelling all tasks that are being processed by instance " +
+          req.data.appIndex
+      );
+      await UPDATE(Tasks)
+        .where({ processingInstance: req.data.appIndex, status: "PROCESSING" })
+        .set({ status: "CANCELLED" });
     });
 
     this.on(Task.actions.complete, async (req) => {
@@ -43,6 +54,7 @@ module.exports = class QueueService extends cds.ApplicationService {
             await SELECT.one.from(Tasks).columns("count(*) as count")
           ).count
         }]`,
+        delay: req.data.delay,
         status: "NEW",
       });
     });

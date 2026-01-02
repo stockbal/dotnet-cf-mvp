@@ -24,7 +24,7 @@ public class TaskBackgroundService : BackgroundService {
         _logger.LogInformation("TaskBackgroundService is starting in app instance {instanceIndex}.", Environment.GetEnvironmentVariable("CF_INSTANCE_INDEX"));
 
         while (!stoppingToken.IsCancellationRequested) {
-            Context.CorrelationId = Guid.NewGuid().ToString();
+            Context.Start();
             using (_logger.BeginScope(new Dictionary<string, object> { { "correlation_id", Context.CorrelationId } })) {
                 _logger.LogInformation("Background task running at: {time}", DateTimeOffset.Now);
 
@@ -32,16 +32,16 @@ public class TaskBackgroundService : BackgroundService {
                 var processor = scope.ServiceProvider.GetRequiredService<ITaskProcessor>();
 
                 try {
-                    if (await processor.ProcessTaskAsync() == 0) {
+                    if (await processor.ProcessTaskAsync(stoppingToken) == 0) {
                         _logger.LogInformation("No tasks to process. Waiting before next check...");
                         // REVISIT: different delays for different instances?? (only instance 0 processes tasks every 30s, others every 2min?)
                         await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
                     }
                 } catch (Exception ex) {
-                    _logger.LogError(ex, "Error occurred executing background task.");
+                    _logger.LogError(ex, "Error occurred executing background task");
                 }
             }
-            Context.CorrelationId = string.Empty;
+            Context.End();
         }
 
         _logger.LogInformation("TaskBackgroundService is stopping.");

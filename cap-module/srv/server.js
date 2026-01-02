@@ -4,6 +4,8 @@ const axios = require("axios");
 const https = require("https");
 const fs = require("fs");
 
+if (cds.env.profiles.includes("development")) return;
+
 const VCAP_SERVICES = JSON.parse(process.env.VCAP_SERVICES);
 const logger = cds.log("server");
 

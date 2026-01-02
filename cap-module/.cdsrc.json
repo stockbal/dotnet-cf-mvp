@@ -1,0 +1,15 @@
+{
+  "requires": {
+    "[with-auth]": {
+      "auth": {
+        "kind": "mocked",
+        "users": {
+          "admin": {
+            "password": "",
+            "roles": ["system-user"]
+          }
+        }
+      }
+    }
+  }
+}
