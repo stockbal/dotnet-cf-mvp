@@ -3,24 +3,23 @@
   "tenant-mode": "dedicated",
   "scopes": [
     {
-      "name": "$XSAPPNAME.User",
-      "description": "User"
+      "name": "$XSAPPNAME.TaskMonitor",
+      "description": "TaskMonitor"
     }
   ],
   "attributes": [],
   "role-templates": [
     {
-      "name": "User",
-      "description": "generated",
-      "scope-references": ["$XSAPPNAME.User"],
-      "attribute-references": []
+      "name": "TaskMonitor",
+      "description": "Reading Taskqueue",
+      "scope-references": ["$XSAPPNAME.TaskMonitor"]
     }
   ],
   "role-collections": [
     {
-      "name": "Dot Net Demo User",
-      "description": "Grants User rights to .NET Demo",
-      "role-template-references": ["$XSAPPNAME.User"]
+      "name": "TaskMonitor",
+      "description": "Allows reading of Taskqueue",
+      "role-template-references": ["$XSAPPNAME.TaskMonitor"]
     }
   ],
   "authorities-inheritance": false,
@@ -28,6 +27,7 @@
     "credential-types": ["binding-secret", "x509"],
     "redirect-uris": [
       "http://localhost:5000/login/callback",
+      "https://*.cfapps.*.hana.ondemand.com/**",
       "https://oauth.pstmn.io/v1/callback"
     ]
   }

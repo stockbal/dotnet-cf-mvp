@@ -1,7 +1,8 @@
 const cds = require("@sap/cds");
-const { Tasks } = require("#cds-models/demo");
+// const { Tasks } = require("#cds-models/demo");
 const {
   Task,
+  Tasks,
   completeOldestTask,
   newTask,
   removeTasks,
@@ -67,7 +68,7 @@ module.exports = class QueueService extends cds.ApplicationService {
       const task = await SELECT.one
         .from(Tasks)
         .orderBy("createdAt ASC")
-        .where({ status: "NEW" });
+        .where({ status: ["NEW", "PROCESSING"] });
       if (!task) {
         req.reject(404, `Task with name '${req.data.name}' not found.`);
       }

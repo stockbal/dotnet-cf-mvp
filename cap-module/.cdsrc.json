@@ -7,6 +7,10 @@
           "admin": {
             "password": "",
             "roles": ["system-user"]
+          },
+          "monitor": {
+            "password": "",
+            "roles": ["TaskMonitor"]
           }
         }
       }

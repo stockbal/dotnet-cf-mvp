@@ -85,7 +85,62 @@ modules:
     requires:
       - name: dotnet-cf-mvp-db
 
+  - name: dotnet-cf-mvp-app
+    type: approuter.nodejs
+    path: cap-module/app/router
+    requires:
+      - name: cap-srv-api
+        group: destinations
+        properties:
+          forwardAuthToken: true
+          name: srv-api
+          url: ~{srv-url}
+      - name: dotnet-cf-mvp-uaa
+      - name: dotnet-cf-mvp-html5-runtime
+    parameters:
+      disk-quota: 256M
+      keep-existing-routes: true
+      memory: 256M
+
+  - name: dotnet-cf-mvp-app-content
+    type: com.sap.application.content
+    path: .
+    requires:
+      - name: dotnet-cf-mvp-repo-host
+        parameters:
+          content-target: true
+    build-parameters:
+      build-result: resources
+      requires:
+        - artifacts:
+            - demouitaskmonitor.zip
+          name: demouitaskmonitor
+          target-path: resources/
+
+  - name: demouitaskmonitor
+    type: html5
+    path: cap-module/app/taskmonitor
+    build-parameters:
+      build-result: dist
+      builder: custom
+      commands:
+        - npm install
+        - npm run build:cf
+      supported-platforms: []
+
 resources:
+  - name: dotnet-cf-mvp-repo-host
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: html5-apps-repo
+      service-plan: app-host
+
+  - name: dotnet-cf-mvp-html5-runtime
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: html5-apps-repo
+      service-plan: app-runtime
+
   - name: dotnet-cf-mvp-uaa
     type: org.cloudfoundry.managed-service
     parameters:

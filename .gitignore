@@ -3,3 +3,7 @@ mta_archives/
 default-*env.json
 cap-logs.json
 dotnet-logs.json
+
+# UI5
+/resources/
+dist/

@@ -9,7 +9,16 @@ namespace demo;
 entity Tasks : cuid, managed {
     name               : String(40);
     delay              : Integer;
-    status             : String(15) enum {
+    duration           : Integer = case
+                                       when status    = #COMPLETED
+                                            or status = #CANCELLED
+                                            or status = #FAILED
+                                            then seconds_between(
+                                                     createdAt, modifiedAt
+                                                 )
+                                       else 0
+                                   end stored;
+    status             : String(15) @changelog enum {
         NEW;
         PROCESSING;
         CANCELLED;

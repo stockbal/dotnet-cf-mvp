@@ -20,7 +20,7 @@ POST {{$dotenv appUrl}}/odata/v4/queue/newTask
 Content-Type: application/json
 {{bearerAuth}}
 
-{"delay": 120}
+{"delay": 90}
 
 ### Completes the oldest Task
 POST {{$dotenv appUrl}}/odata/v4/queue/completeOldestTask
@@ -53,4 +53,60 @@ GET {{$dotenv appUrl}}/odata/v4/queue/Tasks?$filter=status eq 'PROCESSING'&$coun
 
 ### Read all tasks
 GET {{$dotenv appUrl}}/odata/v4/queue/Tasks?$count=true
+    &$filter=createdAt ge 2026-01-08T10:00:00.000Z
+    &$expand=changes($select=createdAt,valueChangedFrom,valueChangedTo)
+    &$orderby=createdAt
 {{bearerAuth}}
+
+
+######################################################
+# Local Testing
+######################################################
+@server = http://localhost:4004
+@auth = Authorization: Basic admin:
+### Creates new Task
+POST {{server}}/odata/v4/queue/newTask
+Content-Type: application/json
+{{auth}}
+
+{}
+
+### Creates new Task with delay
+POST {{server}}/odata/v4/queue/newTask
+Content-Type: application/json
+{{auth}}
+
+{"delay": 120}
+
+### Completes the oldest Task
+POST {{server}}/odata/v4/queue/completeOldestTask
+Content-Type: application/json
+{{auth}}
+
+{}
+
+### Clear all tasks
+POST {{server}}/odata/v4/queue/removeTasks
+Content-Type: application/json
+{{auth}}
+
+{}
+
+### Reserve next open task
+POST {{server}}/odata/v4/queue/reserveOpenTask
+Content-Type: application/json
+{{auth}}
+
+{}
+
+### Read New tasks
+GET {{server}}/odata/v4/queue/Tasks?$filter=status eq 'NEW'&$count=true
+{{auth}}
+
+### Read PROCESSING tasks
+GET {{server}}/odata/v4/queue/Tasks?$filter=status eq 'PROCESSING'&$count=true
+{{auth}}
+
+### Read all tasks
+GET {{server}}/odata/v4/queue/Tasks?$count=true&$orderby=duration&$expand=changes($select=createdAt,valueChangedFrom,valueChangedTo)
+{{auth}}

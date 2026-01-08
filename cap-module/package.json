@@ -5,6 +5,7 @@
   "license": "MIT",
   "private": true,
   "dependencies": {
+    "@cap-js/change-tracking": "^1.1.4",
     "@cap-js/hana": "^2",
     "@sap-cloud-sdk/connectivity": "^4.2.0",
     "@sap-cloud-sdk/http-client": "^4.2.0",
@@ -24,7 +25,9 @@
     "start": "cds-serve",
     "prebuild": "npm ci",
     "build": "cds build --production",
-    "postbuild": "npx @cap-js/cds-typer \"*\" --outputDirectory ./gen/srv/@cds-models"
+    "watch:auth": "cds w --profile with-auth",
+    "postbuild": "npx @cap-js/cds-typer \"*\" --outputDirectory ./gen/srv/@cds-models",
+    "watch-taskmonitor": "cds watch --open taskmonitor/webapp/index.html?sap-ui-xx-viewCache=false"
   },
   "cds": {
     "requires": {
@@ -32,10 +35,14 @@
         "auth": "xsuaa",
         "destinations": true,
         "db": "hana"
-      }
+      },
+      "html5-repo": true
     }
   },
   "imports": {
     "#cds-models/*": "./@cds-models/*/index.js"
-  }
+  },
+  "sapux": [
+    "app/taskmonitor"
+  ]
 }
