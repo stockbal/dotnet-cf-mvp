@@ -39,9 +39,17 @@ module.exports = class QueueService extends cds.ApplicationService {
         "Cancelling all tasks that are being processed by instance " +
           req.data.appIndex
       );
-      await UPDATE(Tasks)
-        .where({ processingInstance: req.data.appIndex, status: "PROCESSING" })
-        .set({ status: "CANCELLED" });
+      const tasksToCancel = await SELECT.from(Tasks).columns("ID").where({
+        processingInstance: req.data.appIndex,
+        status: "PROCESSING",
+      });
+      if (tasksToCancel.length) {
+        await Promise.all(
+          tasksToCancel.map((task) =>
+            UPDATE(Tasks, task.ID).set({ status: "CANCELLED" })
+          )
+        );
+      }
     });
 
     this.on(Task.actions.complete, async (req) => {
