@@ -37,10 +37,10 @@ modules:
                 cool_down_secs: 60
                 adjustment: "+1"
               - metric_type: taskqueue
-                breach_duration_secs: 60
+                breach_duration_secs: 120
                 threshold: 3
                 operator: "<="
-                cool_down_secs: 60
+                cool_down_secs: 120
                 adjustment: "-1"
             credential-type: x509
       - name: cap-srv-api
