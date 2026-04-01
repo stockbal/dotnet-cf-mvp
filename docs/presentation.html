@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auto-Scaling with Custom Metrics - Demo</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/reset.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/reveal.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/theme/black.css">
+    <style>
+        :root {
+            --r-background-color: #1a1a2e;
+            --r-heading-color: #e8e8e8;
+            --r-main-color: #c9c9c9;
+            --r-link-color: #64b5f6;
+            --r-link-color-hover: #42a5f5;
+        }
+        
+        .reveal {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        }
+        
+        .reveal h1, .reveal h2, .reveal h3 {
+            text-transform: none;
+        }
+        
+        .reveal h1 {
+            font-size: 2.25em;
+            margin-bottom: 0.5em;
+            color: #f0f0f0;
+        }
+        
+        .reveal h2 {
+            font-size: 1.62em;
+            margin-bottom: 0.5em;
+            color: #e8e8e8;
+        }
+        
+        .reveal h3 {
+            font-size: 1.26em;
+            margin-bottom: 0.5em;
+            color: #e0e0e0;
+        }
+        
+        .reveal p, .reveal li {
+            color: #c9c9c9;
+        }
+        
+        .reveal strong {
+            color: #f0f0f0;
+        }
+        
+        .component-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            margin: 15px auto;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            max-width: 800px;
+        }
+        
+        .component-box h3 {
+            margin-top: 0;
+            color: white;
+            border-bottom: 2px solid rgba(255,255,255,0.3);
+            padding-bottom: 10px;
+        }
+        
+        .cap-service { background: linear-gradient(135deg, #2d2440 0%, #3a2d5a 100%); border: 2px solid #7c4dff; }
+        .dotnet-service { background: linear-gradient(135deg, #3d2626 0%, #4a2d3a 100%); border: 2px solid #ff6b6b; }
+        .autoscaler-service { background: linear-gradient(135deg, #1e3a5f 0%, #2a4a75 100%); border: 2px solid #64b5f6; }
+        .fiori-service { background: linear-gradient(135deg, #1e3a26 0%, #2a4a3a 100%); border: 2px solid #66bb6a; }
+        
+        .flow-diagram {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+        
+        .flow-step {
+            background: #2d3748;
+            color: #e8e8e8;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 10px;
+            min-width: 150px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            border: 1px solid #4a5568;
+        }
+        
+        .flow-arrow {
+            font-size: 1.8em;
+            color: #64b5f6;
+            margin: 0 10px;
+        }
+        
+        .highlight {
+            color: #ff6b6b;
+            font-weight: bold;
+        }
+        
+        .code-snippet {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 0.72em;
+            text-align: left;
+            margin: 20px auto;
+            max-width: 800px;
+            border: 1px solid #3a3a3a;
+        }
+        
+        .code-snippet code {
+            color: #d4d4d4;
+        }
+        
+        ul {
+            text-align: left;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        li {
+            margin: 10px 0;
+        }
+        
+        .architecture-diagram {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px auto;
+            max-width: 100%;
+            transform: scale(0.95);
+        }
+        
+        .arch-row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 8px 0;
+            width: 100%;
+            flex-wrap: wrap;
+        }
+        
+        .arch-box {
+            background: #2d3748;
+            border: 2px solid #4a5568;
+            border-radius: 8px;
+            padding: 12px 18px;
+            margin: 5px;
+            font-weight: bold;
+            color: #e8e8e8;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+            min-width: 140px;
+            max-width: 180px;
+            text-align: center;
+            font-size: 0.77em;
+        }
+        
+        .arch-box small {
+            font-size: 0.68em;
+            font-weight: normal;
+            color: #b8b8b8;
+        }
+        
+        .arch-box.cap { border-color: #bb86fc; background: #2d2440; color: #e1bee7; }
+        .arch-box.dotnet { border-color: #ff6b6b; background: #3d2626; color: #ffcccb; }
+        .arch-box.autoscaler { border-color: #64b5f6; background: #1e3a5f; color: #bbdefb; }
+        .arch-box.fiori { border-color: #66bb6a; background: #1e3a26; color: #c8e6c9; }
+        .arch-box.hana { border-color: #ffa726; background: #3d3126; color: #ffe0b2; }
+        
+        .vertical-arrow {
+            font-size: 1.62em;
+            color: #90caf9;
+            margin: 2px 0;
+        }
+        
+        .horizontal-arrow {
+            font-size: 1.35em;
+            color: #90caf9;
+            margin: 0 5px;
+        }
+        
+        .metric-box {
+            background: #2d2410;
+            border-left: 4px solid #ffa726;
+            padding: 15px;
+            margin: 15px auto;
+            max-width: 700px;
+            border-radius: 4px;
+            text-align: left;
+            color: #ffe0b2;
+        }
+        
+        .metric-box code {
+            background: #1e1e1e;
+            color: #f0f0f0;
+            padding: 5px;
+            border-radius: 3px;
+        }
+        
+        .key-point {
+            background: #1e3a5f;
+            border-left: 4px solid #64b5f6;
+            padding: 15px;
+            margin: 15px auto;
+            max-width: 700px;
+            border-radius: 4px;
+            text-align: left;
+            color: #bbdefb;
+        }
+        
+        .demo-steps {
+            background: #2d3748;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 700px;
+            border: 1px solid #4a5568;
+        }
+        
+        .demo-steps ol {
+            margin: 15px 0;
+            padding-left: 30px;
+        }
+        
+        .reveal section img {
+            border: none;
+            box-shadow: none;
+        }
+        
+        .tech-stack {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px auto;
+            max-width: 800px;
+        }
+        
+        .tech-item {
+            background: #2d3748;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #64b5f6;
+            color: #c9c9c9;
+        }
+        
+        .tech-item strong {
+            color: #90caf9;
+        }
+        
+        /* Enable scrolling for slides with overflow content */
+        .reveal .slides {
+            overflow: visible !important;
+        }
+        
+        .reveal .slides section {
+            height: 100%;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+            box-sizing: border-box;
+            padding: 20px 40px;
+        }
+        
+        .reveal .slides section.present {
+            display: flex !important;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+        }
+        
+        /* Keep title slides centered */
+        .reveal .slides section.title-slide {
+            justify-content: center !important;
+        }
+        
+        /* Custom scrollbar for webkit browsers */
+        .reveal .slides section::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .reveal .slides section::-webkit-scrollbar-track {
+            background: #1a1a2e;
+            border-radius: 4px;
+        }
+        
+        .reveal .slides section::-webkit-scrollbar-thumb {
+            background: #4a5568;
+            border-radius: 4px;
+        }
+        
+        .reveal .slides section::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+    </style>
+</head>
+<body>
+    <div class="reveal">
+        <div class="slides">
+            
+            <!-- Title Slide -->
+            <section data-auto-animate class="title-slide">
+                <h1>Auto-Scaling with Custom Metrics</h1>
+                <h3>A Cloud Foundry Demo</h3>
+                <p style="margin-top: 50px; font-size: 0.81em; color: #90caf9;">
+                    Dynamic scaling of .NET workers based on queue depth<br>
+                    using SAP Application Autoscaler
+                </p>
+            </section>
+
+            <!-- Overview -->
+            <section>
+                <h2>The Challenge</h2>
+                <div style="font-size: 1em; margin-top: 40px;">
+                    <p>📊 <strong>Problem:</strong> Task processing duration not alignable with <a href="https://help.sap.com/docs/application-autoscaler/application-autoscaler/parameters-for-dynamic-scaling-policy?locale=en-US" target="_blank">default metrics</a> (e.g. CPU, memory)</p>
+                    <p style="margin-top: 30px;">💡 <strong>Solution:</strong> Scale worker instances dynamically based on queue size</p>
+                    <p style="margin-top: 30px;">🎯 <strong>Goal:</strong> Optimize resource usage while maintaining responsiveness</p>
+                </div>
+            </section>
+
+            <!-- Architecture Overview -->
+            <section>
+                <h2>Architecture Overview</h2>
+                <div class="architecture-diagram">
+                    <div class="arch-row">
+                        <div class="arch-box fiori">Fiori Elements App<br><small>Task Management UI</small></div>
+                        <span class="horizontal-arrow">→</span>
+                        <div class="arch-box cap">CAP Service (Node.js)<br><small>Task Queue & Metrics</small></div>
+                    </div>
+                    <div class="vertical-arrow">↓</div>
+                    <div class="arch-row">
+                        <div class="arch-box hana">HANA Cloud<br><small>Task Storage</small></div>
+                    </div>
+                    <div class="vertical-arrow">↑↓</div>
+                    <div class="arch-row">
+                        <div class="arch-box cap">CAP Service<br><small>Custom Metrics</small></div>
+                        <span class="horizontal-arrow">→</span>
+                        <div class="arch-box autoscaler">App Autoscaler<br><small>Scaling Logic</small></div>
+                    </div>
+                    <div class="vertical-arrow">↓</div>
+                    <div class="arch-row">
+                        <div class="arch-box dotnet">.NET Workers<br><small>Task Processing</small></div>
+                        <span class="horizontal-arrow">←</span>
+                        <div class="arch-box cap">CAP OData API<br><small>Task Reservation</small></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Component 1: CAP Service -->
+            <section>
+                <h2>Component 1: CAP Service</h2>
+                <div class="component-box cap-service">
+                    <h3>🎯 Node.js CAP Application</h3>
+                    <ul style="color: white; font-size: 0.81em;">
+                        <li><strong>OData API</strong> for task management and reservation</li>
+                        <li><strong>Custom Metric Reporter</strong> (every 60 seconds)</li>
+                        <li><strong>mTLS Authentication</strong> with Application Autoscaler</li>
+                        <li><strong>Task Queue Logic</strong> (NEW → PROCESSING → COMPLETED)</li>
+                    </ul>
+                </div>
+                <div class="metric-box">
+                    <strong>📈 Custom Metric:</strong><br>
+                    <code style="background: rgba(255, 255, 255, 0.308); padding: 5px; border-radius: 3px;">taskqueue = COUNT(Tasks WHERE status = 'NEW')</code>
+                </div>
+            </section>
+
+            <!-- CAP Code Snippet -->
+            <section>
+                <h2>CAP: Metric Reporting</h2>
+                <div class="code-snippet">
+<pre style="margin: 0; font-size: 0.68em;"><code>// Every 60 seconds
+cds.spawn({ every: 60000 }, async () => {
+  const openTasks = await SELECT.one
+    .from(Tasks)
+    .where({ status: "NEW" })
+    .columns("count(*) as count");
+
+  await axios.post(
+    `${mtlsUrl}/v1/apps/${appId}/metrics`,
+    {
+      instance_index: 0,
+      metrics: [{
+        name: "taskqueue",
+        value: openTasks.count
+      }]
+    },
+    { httpsAgent: mtlsAgent }
+  );
+});</code></pre>
+                </div>
+            </section>
+
+            <!-- CAP API Endpoint -->
+            <section>
+                <h2>CAP: Task Reservation API</h2>
+                <div class="code-snippet">
+<pre style="margin: 0; font-size: 0.63em;"><code>this.on(reserveOpenTask, async (req) => {
+  const nextTask = await SELECT.one
+    .from(Tasks)
+    .where({ status: "NEW" })
+    .orderBy("createdAt ASC")
+    .forUpdate();
+    
+  if (nextTask) {
+    await UPDATE(Tasks, nextTask.ID).set({
+      status: "PROCESSING",
+      processingInstance: req.data.instanceIndex
+    });
+    return { ID: nextTask.ID, name: nextTask.name };
+  }
+  return null;
+});</code></pre>
+                </div>
+            </section>
+
+            <!-- Component 2: .NET Service -->
+            <section>
+                <h2>Component 2: .NET Worker Service</h2>
+                <div class="component-box dotnet-service">
+                    <h3>⚙️ ASP.NET Core Background Service</h3>
+                    <ul style="color: white; font-size: 0.81em;">
+                        <li><strong>Background Worker</strong> polling for tasks</li>
+                        <li><strong>HTTP Client</strong> calling CAP OData API</li>
+                        <li><strong>OAuth 2.0 Client Credentials</strong> authentication</li>
+                        <li><strong>Graceful Shutdown</strong> handling for task cancellation</li>
+                    </ul>
+                </div>
+                <div class="key-point">
+                    <strong>🔄 Polling Loop:</strong> Fetches next task → Processes → Marks complete → Repeats
+                </div>
+            </section>
+
+            <!-- .NET Code Snippet -->
+            <section>
+                <h2>.NET: Background Service</h2>
+                <div class="code-snippet">
+<pre style="margin: 0; font-size: 0.63em;"><code>protected override async Task ExecuteAsync(
+    CancellationToken stoppingToken) {
+  
+  while (!stoppingToken.IsCancellationRequested) {
+    var processor = scope.ServiceProvider
+      .GetRequiredService&lt;ITaskProcessor&gt;();
+    
+    if (await processor.ProcessTaskAsync(stoppingToken) == 0) {
+      _logger.LogInformation("No tasks. Waiting...");
+      await Task.Delay(TimeSpan.FromSeconds(30), 
+                       stoppingToken);
+    }
+  }
+}</code></pre>
+                </div>
+            </section>
+
+            <!-- .NET Task Processing -->
+            <section>
+                <h2>.NET: Task Processing</h2>
+                <div class="code-snippet">
+<pre style="margin: 0; font-size: 0.59em;"><code>public async Task&lt;int&gt; ProcessTaskAsync(CancellationToken ct) {
+  // 1. Reserve next task via CAP API
+  var task = await FetchNextOpenTaskAsync(ct);
+  
+  if (task?.ID != null) {
+    _logger.LogInformation("Processing Task: {taskId}", task.ID);
+    
+    // 2. Simulate work
+    var delay = task.Delay ?? Random.Shared.Next(30, 101);
+    await Task.Delay(TimeSpan.FromSeconds(delay), ct);
+    
+    // 3. Mark complete
+    await SetTaskCompleted(task.ID, ct);
+    return 1;
+  }
+  return 0;
+}</code></pre>
+                </div>
+            </section>
+
+            <!-- Component 3: Application Autoscaler -->
+            <section>
+                <h2>Component 3: Application Autoscaler</h2>
+                <div class="component-box autoscaler-service">
+                    <h3>📊 SAP Application Autoscaler</h3>
+                    <ul style="color: white; font-size: 0.81em;">
+                        <li><strong>Custom Metric Collection</strong> via mTLS endpoint</li>
+                        <li><strong>Scaling Policies</strong> based on queue depth</li>
+                        <li><strong>Dynamic Instance Management</strong> (1 to N workers)</li>
+                        <li><strong>Cool-down Periods</strong> to prevent flapping</li>
+                    </ul>
+                </div>
+                <div class="metric-box">
+                    <strong>⚡ Scaling Logic:</strong><br>
+                    <ul style="margin: 10px 0 0 20px; font-size: 0.81em;">
+                        <li>taskqueue > 3 → Scale UP</li>
+                        <li>taskqueue ≤ 3 → Scale DOWN</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Component 4: Fiori App -->
+            <section>
+                <h2>Component 4: Fiori Elements App</h2>
+                <div class="component-box fiori-service">
+                    <h3>🖥️ Task Management UI</h3>
+                    <ul style="color: white; font-size: 0.81em;">
+                        <li><strong>Fiori Elements</strong> List Report application</li>
+                        <li><strong>Standalone App Router</strong> (Node.js)</li>
+                        <li><strong>Task Creation</strong> with configurable delay</li>
+                        <li><strong>Real-time Status Monitoring</strong></li>
+                    </ul>
+                </div>
+                <div class="key-point">
+                    <strong>🎮 Demo Interface:</strong> Create tasks to trigger auto-scaling behavior
+                </div>
+            </section>
+
+            <!-- Flow Diagram -->
+            <section>
+                <h2>End-to-End Flow</h2>
+                <div style="font-size: 0.77em; text-align: left; max-width: 800px; margin: 0 auto;">
+                    <ol style="line-height: 1.8;">
+                        <li>👤 User creates tasks via <strong>Fiori UI</strong></li>
+                        <li>💾 Tasks stored in <strong>HANA Cloud</strong> with status "NEW"</li>
+                        <li>📊 <strong>CAP Service</strong> reports queue size to Autoscaler every 60s</li>
+                        <li>⚖️ <strong>Autoscaler</strong> evaluates metric against policies</li>
+                        <li>🚀 Autoscaler <strong>scales .NET instances</strong> up or down</li>
+                        <li>🔄 <strong>.NET Workers</strong> poll CAP API for tasks</li>
+                        <li>🔒 Task status updated: NEW → <strong>PROCESSING</strong></li>
+                        <li>⏳ Worker <strong>processes task</strong> (simulated delay)</li>
+                        <li>✅ Task status updated: PROCESSING → <strong>COMPLETED</strong></li>
+                        <li>🔁 Loop continues with next task</li>
+                    </ol>
+                </div>
+            </section>
+
+            <!-- Technical Stack -->
+            <section>
+                <h2>Technology Stack</h2>
+                <div class="tech-stack">
+                    <div class="tech-item">
+                        <strong>Backend</strong><br>
+                        SAP CAP (Node.js)
+                    </div>
+                    <div class="tech-item">
+                        <strong>Workers</strong><br>
+                        ASP.NET Core 8+
+                    </div>
+                    <div class="tech-item">
+                        <strong>Database</strong><br>
+                        SAP HANA Cloud
+                    </div>
+                    <div class="tech-item">
+                        <strong>Frontend</strong><br>
+                        Fiori Elements
+                    </div>
+                    <div class="tech-item">
+                        <strong>Platform</strong><br>
+                        Cloud Foundry
+                    </div>
+                    <div class="tech-item">
+                        <strong>Scaling</strong><br>
+                        App Autoscaler
+                    </div>
+                    <div class="tech-item">
+                        <strong>Auth</strong><br>
+                        XSUAA / OAuth 2.0
+                    </div>
+                    <div class="tech-item">
+                        <strong>Protocol</strong><br>
+                        OData V4
+                    </div>
+                </div>
+            </section>
+
+            <!-- Demo Steps -->
+            <section>
+                <h2>Live Demo</h2>
+                <div class="demo-steps">
+                    <h3 style="margin-top: 0;">🎬 Demo Scenario</h3>
+                    <ol>
+                        <li>Open Fiori app and check current task queue</li>
+                        <li>Observe current .NET instance count</li>
+                        <li>Create 10+ tasks with varying delays</li>
+                        <li>Watch custom metric increase in logs</li>
+                        <li>Monitor Autoscaler scaling up new instances</li>
+                        <li>Observe tasks being processed in parallel</li>
+                        <li>Wait for queue to drain</li>
+                        <li>Watch Autoscaler scale down instances</li>
+                    </ol>
+                </div>
+            </section>
+
+            <!-- Key Benefits -->
+            <section>
+                <h2>Key Benefits</h2>
+                <div style="font-size: 1em; text-align: left; max-width: 700px; margin: 40px auto;">
+                    <div style="margin: 25px 0;">
+                        <strong style="color: #27ae60; font-size: 1.08em;">💰 Cost Efficiency</strong>
+                        <p style="margin: 10px 0 0 30px;">Pay only for resources when needed</p>
+                    </div>
+                    <div style="margin: 25px 0;">
+                        <strong style="color: #3498db; font-size: 1.08em;">⚡ Responsiveness</strong>
+                        <p style="margin: 10px 0 0 30px;">Automatic capacity adjustment to workload</p>
+                    </div>
+                    <div style="margin: 25px 0;">
+                        <strong style="color: #9b59b6; font-size: 1.08em;">🔧 Flexibility</strong>
+                        <p style="margin: 10px 0 0 30px;">Custom metrics tailored to business needs</p>
+                    </div>
+                    <div style="margin: 25px 0;">
+                        <strong style="color: #e74c3c; font-size: 1.08em;">🎯 Simplicity</strong>
+                        <p style="margin: 10px 0 0 30px;">Declarative scaling policies, no manual intervention</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Challenges & Considerations -->
+            <section>
+                <h2>Challenges & Considerations</h2>
+                <div style="text-align: left; max-width: 750px; margin: 30px auto; font-size: 0.81em;">
+                    <div class="key-point" style="background: #3d3420; border-color: #ffa726; color: #ffe0b2;">
+                        <strong style="color: #ffcc80;">⚠️ Graceful Shutdown</strong><br>
+                        <span style="font-size: 0.81em;">Instances may be terminated while processing tasks. Need proper cancellation handling.</span>
+                    </div>
+                    <div class="key-point" style="background: #3d2426; border-color: #ff6b6b; margin-top: 20px; color: #ffcccb;">
+                        <strong style="color: #ff8a80;">⏱️ Metric Reporting Frequency</strong><br>
+                        <span style="font-size: 0.81em;">60-second reporting interval trades off between responsiveness and overhead.</span>
+                    </div>
+                    <div class="key-point" style="background: #1e3540; border-color: #64b5f6; margin-top: 20px; color: #b3e5fc;">
+                        <strong style="color: #81d4fa;">🔐 Certificate Rotation</strong><br>
+                        <span style="font-size: 0.81em;">mTLS certificates renewed every 24 hours, must reload on each request.</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Future Enhancements -->
+            <section>
+                <h2>Future Enhancements</h2>
+                <ul style="font-size: 0.86em;">
+                    <li>✨ <strong>Intelligent downscaling</strong>: Prevent instance termination during task processing</li>
+                    <li>📊 <strong>Task prioritization</strong>: Process high-priority tasks first</li>
+                    <li>🔄 <strong>Retry logic</strong>: Automatic retry for failed tasks</li>
+                    <li>📈 <strong>Multi-metric scaling</strong>: Combine queue depth with CPU/memory</li>
+                    <li>🔔 <strong>Alerting</strong>: Notify on queue overflow or processing failures</li>
+                    <li>📉 <strong>Analytics dashboard</strong>: Visualize scaling events and task throughput</li>
+                </ul>
+            </section>
+
+            <!-- Thank You -->
+            <section class="title-slide">
+                <h1>Thank You!</h1>
+                <div style="margin-top: 60px; font-size: 1em;">
+                    <p>🚀 <strong>Auto-Scaling with Custom Metrics</strong></p>
+                    <p style="margin-top: 30px; color: #7f8c8d;">
+                        Leveraging SAP Application Autoscaler<br>
+                        for intelligent resource management
+                    </p>
+                </div>
+                <div style="margin-top: 60px; font-size: 0.72em; color: #95a5a6;">
+                    <p>Questions?</p>
+                </div>
+            </section>
+
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/reveal.js"></script>
+    <script>
+        Reveal.initialize({
+            hash: true,
+            transition: 'slide',
+            transitionSpeed: 'default',
+            controls: true,
+            progress: true,
+            center: false, // Disable vertical centering to allow scrolling
+            slideNumber: 'c/t',
+            showNotes: false,
+            width: 1280,
+            height: 720,
+            margin: 0.04,
+            minScale: 0.2,
+            maxScale: 2.0,
+        });
+    </script>
+</body>
+</html>
