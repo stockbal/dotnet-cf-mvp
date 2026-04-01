@@ -1,12 +1,12 @@
 using TasksService as service from '../../srv/tasks-service';
 
 annotate service.Tasks with @( //
-    UI.HeaderInfo     : {
+    UI.HeaderInfo                  : {
         TypeName      : 'Task',
         TypeNamePlural: 'Tasks',
         Title         : {Value: name}
     },
-    UI.LineItem       : [
+    UI.LineItem                    : [
         {Value: name},
         {
             Value       : status,
@@ -16,6 +16,8 @@ annotate service.Tasks with @( //
         {Value: duration},
         {Value: delay},
         {Value: processingInstance},
+        {Value: createdAt},
+        {Value: modifiedAt},
         {
             $Type : 'UI.DataFieldForAction',
             Action: 'TasksService.EntityContainer/quickTask',
@@ -23,25 +25,38 @@ annotate service.Tasks with @( //
 
         },
     ],
-    UI.Identification : [
+    UI.Identification              : [
         {Value: name},
         {Value: status},
         {Value: duration},
         {Value: processingInstance}
     ],
-    UI.Facets         : [{
+    UI.Facets                      : [{
         $Type : 'UI.ReferenceFacet',
         Label : 'General Information',
         Target: '@UI.Identification'
     }],
-    Capabilities      : {FilterRestrictions: {
+    Capabilities                   : {FilterRestrictions: {
         $Type                       : 'Capabilities.FilterRestrictionsType',
         FilterExpressionRestrictions: [{
             Property          : createdAt,
             AllowedExpressions: 'SingleRange'
         }]
     }},
-    UI.SelectionFields: [createdAt, ],
+    UI.SelectionFields             : [createdAt],
+    UI.SelectionPresentationVariant: {
+        PresentationVariant: {
+            Visualizations: ['@UI.LineItem'],
+            SortOrder     : [{
+                Property  : createdAt,
+                Descending: false
+            }]
+        },
+        SelectionVariant   : {
+            $Type        : 'UI.SelectionVariantType',
+            SelectOptions: []
+        },
+    },
 );
 
 annotate service.Tasks with {
