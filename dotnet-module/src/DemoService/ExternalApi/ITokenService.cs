@@ -1,6 +1,6 @@
 ﻿// Copyright (c) Demo AG. All Rights Reserved.
 
-using DevEpos.CF.Demo.Env;
+using DevEpos.CF.Demo.EnvAccess;
 
 namespace DevEpos.CF.Demo.ExternalApi;
 

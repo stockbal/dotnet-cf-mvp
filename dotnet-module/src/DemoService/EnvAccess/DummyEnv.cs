@@ -1,6 +1,6 @@
 ﻿// Copyright (c) Demo AG. All Rights Reserved.
 
-namespace DevEpos.CF.Demo.Env;
+namespace DevEpos.CF.Demo.EnvAccess;
 
 /// <summary>
 /// Dummy service env variables

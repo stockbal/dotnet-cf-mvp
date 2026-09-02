@@ -3,7 +3,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace DevEpos.CF.Demo.Env;
+namespace DevEpos.CF.Demo.EnvAccess;
 
 #region private classes for JSON parsing
 

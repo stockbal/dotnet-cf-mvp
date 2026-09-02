@@ -1,6 +1,6 @@
 ﻿// Copyright (c) Demo AG. All Rights Reserved.
 
-namespace DevEpos.CF.Demo.Env;
+namespace DevEpos.CF.Demo.EnvAccess;
 
 /// <summary>
 /// Provides access to environment variables of services (e.g. XSUAA, SDM, ....)

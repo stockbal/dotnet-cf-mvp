@@ -2,7 +2,7 @@
 
 using System.Text.Json.Serialization;
 
-namespace DevEpos.CF.Demo.Env;
+namespace DevEpos.CF.Demo.EnvAccess;
 
 /// <summary>
 /// Credentials for accessing a UAA service instance
